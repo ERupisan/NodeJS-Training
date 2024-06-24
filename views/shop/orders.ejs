@@ -2,5 +2,20 @@
 </head>
 <body>
     <%- include('../includes/navigation.ejs') %>
-
+    <main>
+        <% if (orders.length > 0) { %>
+            <ul>
+                <% orders.forEach(o => { %>
+                    <li>
+                        <img src="<%= o.productImage %>" alt="<%= o.title %>">
+                        <h1><%= o.title %></h1>
+                        <h2><%= o.quantity %></h2>
+                        <p><%= o.description %></p>
+                    </li>
+                <% }) %>
+            </ul>
+            <% } else { %>
+                <h1>No Products in Cart!</h1>
+                <% } %>
+    </main>
 <%- include('../includes/end.ejs') %>
