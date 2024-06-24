@@ -17,8 +17,11 @@
                         </li>
                     <% }) %>
                 </ul>
-            <% } else { %>
-                <h1>No Products in Cart!</h1>
-            <% } %>
+                <form action="/orders" method="POST">
+                    <button class="btn" type="submit">Order Now!</button>
+                </form>
+                <% } else { %>
+                    <h1>No Products in Cart!</h1>
+                    <% } %>
         </main>
         <%- include('../includes/end.ejs') %>

@@ -1,9 +1,9 @@
 const Sequelize = require("sequelize");
 
-const sequelize = new Sequelize("nodedb", "root", "77pwd", {
+const sequelize = new Sequelize("nodedb", "root", "admin2255", {
   dialect: "mysql",
   host: "localhost",
-  port: 3308,
+  port: 3306,
 });
 
 module.exports = sequelize;

@@ -1,5 +1,7 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const CartItem = require("../models/cart-item");
+const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -14,12 +16,12 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getProduct = (req, res, next) => {
-  console.log("params", req.params);
+  // console.log("params", req.params);
   const prodId = req.params.productId;
-  console.log("prodId", prodId);
+  // console.log("prodId", prodId);
   Product.findByPk(prodId)
     .then((product) => {
-      console.log(product);
+      // console.log(product);
       res.render("shop/product-detail", {
         product: product,
         pageTitle: product.title,
@@ -40,7 +42,6 @@ exports.getIndex = (req, res, next) => {
     })
     .catch((err) => console.log(err));
 };
-
 
 exports.getCart = (req, res, next) => {
   let fetchedCart;
@@ -68,6 +69,7 @@ exports.postCart = (req, res, next) => {
 
   let fetchedCart;
   let newQuantity = 1;
+  let cartId;
   req.user
     .getCart()
     .then((cart) => {
@@ -99,19 +101,84 @@ exports.postCart = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
-exports.postCartDeleteProduct = (req, res, next) => {
+exports.postCartDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  try {
+    CartItem.findOne({
+      where: {
+        productId: prodId,
+      },
+    }).then((cartItem) => {
+      console.log(cartItem);
+      cartItem.destroy();
+      res.redirect("/cart");
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.getOrders = (req, res, next) => {
-  res.render("shop/orders", {
-    pageTitle: "Your Orders",
-    path: "/orders",
-  });
+exports.getOrders = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const orders = await Order.findAll({ where: { userId } });
+
+    const orderList = await Promise.all(
+      orders.map(async (order) => {
+        const product = await Product.findOne({
+          where: { id: order.productId },
+        });
+        console.log(product.imageUrl);
+        return {
+          quantity: order.quantity,
+          productImage: product.imageUrl,
+          title: product.title,
+          price: product.price,
+          description: product.description,
+        };
+      })
+    );
+
+    res.render("shop/orders", {
+      pageTitle: "Your Orders",
+      path: "/orders",
+      orders: orderList,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+exports.postOrders = async (req, res, next) => {
+  try {
+    const user = req.user.id;
+
+    const cart = await Cart.findOne({
+      where: {
+        userId: user,
+      },
+    });
+
+    CartItem.findAll({
+      where: {
+        cartId: cart.id,
+      },
+    }).then((cartItems) => {
+      cartItems.forEach((item) => {
+        Order.create({
+          quantity: item.quantity,
+          productId: item.productId,
+          userId: user,
+        });
+
+        item.destroy();
+      });
+    });
+    cart.destroy();
+    res.redirect("/orders");
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.getCheckout = (req, res, next) => {

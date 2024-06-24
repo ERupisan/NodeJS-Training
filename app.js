@@ -10,6 +10,7 @@ const Product = require("./models/product");
 const User = require("./models/user");
 const Cart = require("./models/cart");
 const CartItem = require("./models/cart-item");
+const Order = require("./models/order");
 // const expressHbs = require("express-handlebars");
 
 const app = express();
@@ -54,6 +55,11 @@ User.hasMany(Product);
 
 User.hasOne(Cart);
 Cart.belongsTo(User);
+User.hasOne(Order);
+// Order.belongsTo(Cart);
+// Cart.hasOne(Order);
+Order.belongsTo(Product, { through: CartItem });
+Product.belongsTo(Order, { through: CartItem });
 Cart.belongsToMany(Product, { through: CartItem });
 Product.belongsToMany(Cart, { through: CartItem });
 
@@ -61,7 +67,7 @@ sequelize
   .sync()
   // .sync({ force: true })
   .then((result) => {
-    console.log(result);
+    // console.log(result);
     return User.findByPk(1);
   })
   .then((user) => {
@@ -70,8 +76,8 @@ sequelize
     }
     return user;
   })
-  .then(user => {
-    return user.createCart()
+  .then((user) => {
+    return user.createCart();
   })
   .then((cart) => {
     app.listen(3000);
