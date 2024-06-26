@@ -4,6 +4,7 @@ const adminRouter = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const path = require("path");
 const errorController = require("./controllers/error");
+const User = require("./models/user");
 
 const mongoConnect = require("./util/database").mongoConnect;
 
@@ -30,6 +31,19 @@ app.use(shopRoutes);
 app.use(errorController.get404);
 
 mongoConnect(() => {
+  let userDetails = {
+    username: "Ethan",
+    password: "Matcha",
+  };
+
+  User.findByUsername(userDetails.username).then((response) => {
+    if (!response) {
+      const user = new User(userDetails.username, userDetails.password);
+
+      user.save();
+    }
+  });
+
   console.log();
   app.listen(3000);
 });
